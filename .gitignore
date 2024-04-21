@@ -4,6 +4,7 @@
 build/
 bin/
 out/
+lib/
 
 # Ignore CMake build files
 CMakeFiles/
@@ -11,7 +12,7 @@ CMakeCache.txt
 CMakeScripts/
 CMakeLists.txt.user
 cmake_install.cmake
-
+Makefile
 # Ignore Visual Studio Code settings
 .vscode/
 

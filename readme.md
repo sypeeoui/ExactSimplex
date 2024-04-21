@@ -18,10 +18,18 @@ git submodule update --init --recursive
 
 ## Build
 
+Metti il codice in mainFolder/
+aggiungendo 
+```c++
+#include "Simplex.h"
+```
+
+Poi per compilare
 ```bash
 cmake CMakeLists.txt
 make
 ```
+The executables will be in the out/ directory.
 
 ## Autore
 
