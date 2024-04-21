@@ -1,0 +1,6 @@
+[submodule "modules/rational"]
+	path = modules/rational
+	url = https://github.com/tcbrindle/rational.git
+[submodule "modules/eigen"]
+	path = modules/eigen
+	url = https://gitlab.com/libeigen/eigen.git

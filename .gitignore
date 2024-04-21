@@ -33,4 +33,4 @@ dependencies/
 
 # Ignore localtest
 localtest/
-lt*
+lt_*
