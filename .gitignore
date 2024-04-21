@@ -1,0 +1,36 @@
+### GITIGNORE FILE ###
+
+# Ignore build output
+build/
+bin/
+out/
+
+# Ignore CMake build files
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+CMakeLists.txt.user
+cmake_install.cmake
+
+# Ignore Visual Studio Code settings
+.vscode/
+
+# Ignore compiled object files
+*.o
+*.obj
+
+# Ignore executables
+*.exe
+*.out
+
+# Ignore generated files
+*.dll
+*.so
+*.dylib
+
+# Ignore dependency directories
+dependencies/
+
+# Ignore localtest
+localtest/
+lt*
