@@ -18,8 +18,8 @@ git submodule update --init --recursive
 
 ## Build
 
-Metti il codice in mainFolder/
-aggiungendo 
+Metti il codice in `mainFolder/`
+aggiungendo
 ```c++
 #include "Simplex.h"
 ```
@@ -29,7 +29,13 @@ Poi per compilare
 cmake CMakeLists.txt
 make
 ```
-The executables will be in the out/ directory.
+
+Se si vuole usare un tipo `(DOUBLE, FLOAT, RATIONAL_INT, DEFAULT)` diverso usare la flag `-DDUSE_TYPE=DOUBLE`
+```bash
+cmake -DDUSE_TYPE=DOUBLE CMakeLists.txt
+make
+```
+Gli eseguiti verranno prodotti nella cartella `out/`.
 
 ## Autore
 
