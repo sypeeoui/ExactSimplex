@@ -64,6 +64,6 @@ Marco Cococcioni
   - [ ] Definizione elementi della classe `Simplex`
   - [ ] Implementazione della funzione `solve`
   - [ ] 
-  - [ ] Aggiunta numeri razionali
+  - [X] Aggiunta numeri razionali -> **Opzione a livello di cmake**
 - [ ] Testing e applicazioni (confronto con la versione floating point)
 - [ ] Relazione / Presentazione
