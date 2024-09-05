@@ -13,6 +13,7 @@ CMakeScripts/
 CMakeLists.txt.user
 cmake_install.cmake
 Makefile
+
 # Ignore Visual Studio Code settings
 .vscode/
 

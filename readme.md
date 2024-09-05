@@ -32,7 +32,7 @@ make
 
 Se si vuole usare un tipo `(DOUBLE, FLOAT, RATIONAL_INT, DEFAULT)` diverso usare la flag `-DDUSE_TYPE=DOUBLE`
 ```bash
-cmake -DDUSE_TYPE=DOUBLE CMakeLists.txt
+cmake -DUSE_TYPE=DOUBLE CMakeLists.txt
 make
 ```
 Gli eseguiti verranno prodotti nella cartella `out/`.
