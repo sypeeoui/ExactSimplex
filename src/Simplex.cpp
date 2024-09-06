@@ -138,9 +138,14 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
             }
         }
         if (yB_geq_0) {
+            cout << "++++++++++++++++++++++++++++++" << endl;
             cout << "Optimal solution found" << endl;
+            cout << "++++++++++++++++++++++++++++++" << endl;
             cout << "xB = " << endl << xB.transpose() << endl;
             cout << "yB = " << endl << yB.transpose() << endl;
+            cout << "fObj = " << xB.dot(c) << endl;
+            cout << "iter = " << iter << endl;
+            cout << "++++++++++++++++++++++++++++++" << endl;
             return pSimplex_tuple
             (xB.dot(c), xB, base, yB, 1, iter);
         }
@@ -357,6 +362,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
         cout << endl;
         cout << "-----" << endl;
         osl base;
+        iter = get<5>(answer) + 1;
         for (auto i : baseAux) {
             if (i < nCon) {
                 base.insert(i);
