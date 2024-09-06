@@ -18,9 +18,25 @@ int main() {
     Mat b = Vec(8);
     b << 1000, 800, 500, 0, 0, 0, 0, 0;
     osl base;
-    base.insert(1);
-    base.insert(5);
-    base.insert(6);
+    // base.insert(2);
+    // base.insert(3);
+    // base.insert(4);
 
-    pSimplex(c, A, b, base, 5);
+    pSimplex_tuple answer = pSimplex(c, A, b, base, 3);
+    cout << "---- pSimplex ----" << endl;
+    cout << "fObj = " << get<0>(answer) << endl;
+    cout << "-----" << endl;
+    cout << "xB = " << endl << get<1>(answer).transpose() << endl;
+    cout << "-----" << endl;
+    cout << "base = " << endl;
+    for(auto i : get<2>(answer)) cout << i << " ";
+    cout << endl;
+    cout << "-----" << endl;
+    cout << "yB = " << endl << get<3>(answer).transpose() << endl;
+    cout << "-----" << endl;
+    cout << "flag = " << get<4>(answer) << endl;
+    cout << "-----" << endl;
+    cout << "iter = " << get<5>(answer) << endl;
+    cout << "-----" << endl;
+    return 0;
 }

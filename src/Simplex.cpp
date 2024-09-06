@@ -10,7 +10,8 @@
 //     cout << m << endl;
 // }
 
-void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
+pSimplex_tuple
+pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
     ll iter = 0;
     Mat B(A.cols(), A.cols());
     Mat N(A.rows() - A.cols(), A.cols());
@@ -27,7 +28,20 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
     Vec ratio(A.rows() - A.cols());
     Vec keyratio(A.rows() - A.cols());
     ll ridx;
-    ll theta;
+
+    // output variables fObj,xB,B,yB,flag,iter
+    BaseType fObj;
+    // xB;
+    // base;
+    // yB;
+    ll flag; 
+    //  -100 generic error,
+    //  -5 unbounded, 
+    //  -3 linear dependent base,
+    //  -2 infeasible,
+    //  0 max_iter reached
+    //  1 optimal
+    // iter;
     
     cout << "----- pSimplex -----" << endl;
     cout << "c = " << endl << c.transpose() << endl;
@@ -42,24 +56,25 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
 
     if (c.size() != A.cols()) {
         cout << "Error: c.size() != A.cols()" << endl;
-        return;
+        return pSimplex_tuple
+        (xB.dot(c), xB, base, yB, -100, iter);
     }
     if (A.rows() != b.size()) {
         cout << "Error: A.rows() != b.size()" << endl;
-        return;
+        return pSimplex_tuple
+        (xB.dot(c), xB, base, yB, -100, iter);
     }
     if (A.cols() != base.size()) {
-        cout << "Error: A.cols() != base.size()" << endl;
-        return;
+        cout << "Base not setted, using auxiliary problem..." << endl;
+        pair<osl, ll> AuxAnswer = pSimplexAux(A, b);
+        base = AuxAnswer.first;
+        iter = AuxAnswer.second;
     }
-
-
     
 
-    for (ll i = 0; i < max_iter; i++) {
+    for (iter; iter < max_iter; iter++) {
         
         cout << "---- Iteration " << iter << " ----" << endl;
-        iter++;
 
         ll Nidx = 0;
         ll key;
@@ -73,18 +88,10 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
                 N.row(Nidx++) = A.row(i);
             }
         }
-
-        cout << "-----" << endl;
-        cout << "B = " << endl << B << endl;
-        cout << "-----" << endl;
-        cout << "N = " << endl << N << endl;
-        cout << "-----" << endl;
-        cout << "bB = " << endl << bB.transpose() << endl;
-        cout << "-----" << endl;
-
         if (B.determinant() == 0) {
             cout << "Error: Linear dependent base" << endl;
-            return;
+            return pSimplex_tuple
+            (xB.dot(c), xB, base, yB, -3, iter);
         }
         Binv = B.inverse();
         xB = Binv * bB; 
@@ -92,6 +99,8 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
 
 
         cout << "B = " << endl << B << endl;
+        cout << "-----" << endl;
+        cout << "Binv = " << endl << Binv << endl;
         cout << "-----" << endl;
         cout << "N = " << endl << N << endl;
         cout << "-----" << endl;
@@ -101,6 +110,24 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "-----" << endl;
         cout << "yB = " << endl << yB.transpose() << endl;
         cout << "-----" << endl;
+
+        // check if it's feasible
+        if (iter == 0) {
+            bool feasible = true;
+            cout << "Check if it's feasible" << endl;
+
+            for (ll i = 0; i < b.size(); i++) {
+                if (b(i) - A.row(i).dot(xB) < 0) {
+                    cout << "++++++++++++++++++++++++++++++" << endl;
+                    cout << "Infeasible base" << endl;
+                    cout << "++++++++++++++++++++++++++++++" << endl;
+                    feasible = false;
+                    return pSimplex_tuple
+                    (xB.dot(c), xB, base, yB, -2, iter);
+                }
+            }
+        }
+
 
         cout << "Check if yB >= 0" << endl;
         bool yB_geq_0 = true;
@@ -114,7 +141,8 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
             cout << "Optimal solution found" << endl;
             cout << "xB = " << endl << xB.transpose() << endl;
             cout << "yB = " << endl << yB.transpose() << endl;
-            return;
+            return pSimplex_tuple
+            (xB.dot(c), xB, base, yB, 1, iter);
         }
 
         // Find the outgoing index
@@ -156,14 +184,15 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
 
         if (unbounded) {
             cout << "Unbounded solution" << endl;
-            return;
+            return pSimplex_tuple
+            (xB.dot(c), xB, base, yB, -5, iter);
         }
 
         // ratios
         // find the incoming index
         ll k = 0;
+        BaseType theta = -1;
         ridx = 0;
-        theta = -1;
 
         for (ll i = 0; i < A.rows(); i++) {
             if (AWh(i) > 0) {
@@ -179,7 +208,8 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         }
         cout << "-------" << endl;
         cout << "ratio = " << endl << ratio.transpose() << endl;
-
+        cout << "-------" << endl;
+        cout << "theta = " << theta << endl;
         cout << "-------" << endl;
         cout << "k = " << k << endl;
         cout << "-------" << endl;
@@ -193,4 +223,150 @@ void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
 
     }
 
+    return pSimplex_tuple
+    (xB.dot(c), xB, base, yB, 0, iter);
+
+}
+
+pair<osl, ll> pSimplexAux(Mat A, Vec b) {
+    ll iter = 0;
+    ll nVar = A.cols();
+    ll nCon = A.rows();
+    Mat B(A.cols(), A.cols());
+    Mat Binv(A.cols(), A.cols());
+
+    Vec bB(A.cols());
+    Vec xB(A.cols());
+    Vec yB(A.rows());
+    
+    osl base;
+    ll bIdx = 0;
+    for(ll i = 0; i < nVar; i++) {
+        base.insert(i);
+        B.row(i) = A.row(i);
+        bB(bIdx++) = b(i);
+    }
+    Binv = B.inverse();
+    xB = Binv * bB;
+
+    cout << "----- pSimplexAux -----" << endl;
+    cout << "A = " << endl << A << endl;
+    cout << "-----" << endl;
+    cout << "b = " << endl << b.transpose() << endl;
+    cout << "-----" << endl;
+    cout << "base = " << endl;
+    for(auto i : base) cout << i << " ";
+    cout << endl;
+    cout << "-----" << endl;
+    cout << "B = " << endl << B << endl;
+    cout << "-----" << endl;
+    cout << "xB = " << endl << xB.transpose() << endl;
+    cout << "-----" << endl;
+
+    bool feasible = true;
+    for (ll i = 0; i < b.size(); i++) {
+        if (A.row(i).dot(xB) > b(i)) {
+            feasible = false;
+            break;
+        }
+    }
+    if (feasible) {
+        cout << "++++++++++++++++++++++++++++++" << endl;
+        cout << "base is feasible" << endl;
+        cout << "++++++++++++++++++++++++++++++" << endl;
+        return make_pair(base, iter); 
+    }
+
+    cout << "------" << endl;
+    cout << "base is not feasible. Starting auxiliary problem..." << endl;
+    cout << "------" << endl;
+
+    osl U, V;
+    for (ll i = nVar; i < nCon; i++) {
+        if (A.row(i).dot(xB) > b(i)) {
+            V.insert(i);
+        } else {
+            U.insert(i);
+        }
+    }
+    cout << "-----" << endl;
+    cout << "U = " << endl;
+    for(auto i : U) cout << i << " ";
+    cout << endl;
+    cout << "-----" << endl;
+    cout << "V = " << endl;
+    for(auto i : V) cout << i << " ";
+    cout << endl;
+    cout << "-----" << endl;
+
+    ll nConAux = nCon + V.size();
+    ll nVarAux = nVar + V.size();
+
+    Mat Aaux(nConAux, nVarAux);
+
+    Aaux.block(0, 0, nCon, nVar) = A;
+
+    ll Idx = 0;
+    for (ll i: V) {
+        Aaux(i, nVar + Idx) = -1;
+        // cout << "Aaux(" << i << "," << nVar + Idx << ") = -1" << endl;
+        Aaux(nCon + Idx, nVar + Idx) = -1;
+        // cout << "Aaux(" << nCon + Idx << "," << nVar + Idx << ") = -1" << endl;
+        // cout << "Aaux_" << Idx <<  " = " << endl << Aaux << endl;
+        Idx++;
+    }
+
+    Vec baux(nConAux);
+    baux.head(nCon) = b;
+
+    Vec cAux(nVarAux);
+    cAux.tail(V.size()) = -Vec::Ones(V.size());
+
+    osl baseAux;
+    baseAux.join(base);
+    baseAux.join(V);
+
+    cout << "-----" << endl;
+    cout << "U = " << endl;
+    for(auto i : U) cout << i << " ";
+    cout << endl;
+    cout << "-----" << endl;
+    cout << "V = " << endl;
+    for(auto i : V) cout << i << " ";
+    cout << endl;
+    cout << "-----" << endl;
+    cout << "Aaux = " << endl << Aaux << endl;
+    cout << "-----" << endl;
+    cout << "baux = " << endl << baux.transpose() << endl;
+    cout << "-----" << endl;
+    cout << "cAux = " << endl << cAux.transpose() << endl;
+    cout << "-----" << endl;
+    cout << "baseAux = " << endl;
+    for(auto i : baseAux) cout << i << " ";
+    cout << endl;
+    pSimplex_tuple answer = pSimplex(cAux, Aaux, baux, baseAux, 100);
+
+    if (get<4>(answer) == 1) {
+        cout << "++++++++++++++++++++++++++++++" << endl;
+        cout << "Auxiliary problem solved" << endl;
+        cout << "++++++++++++++++++++++++++++++" << endl;
+        // remove the artificial variables
+        osl baseAux = get<2>(answer);
+        cout << "baseAux = " << endl;
+        for(auto i : baseAux) cout << i << " ";
+        cout << endl;
+        cout << "-----" << endl;
+        osl base;
+        for (auto i : baseAux) {
+            if (i < nCon) {
+                base.insert(i);
+            }
+        }
+        return make_pair(base, iter);
+    } else {
+        cout << "++++++++++++++++++++++++++++++" << endl;
+        cout << "Auxiliary problem failed" << endl;
+        cout << "++++++++++++++++++++++++++++++" << endl;
+        return make_pair(base, iter);
+    }
 }

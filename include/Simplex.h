@@ -39,5 +39,9 @@ typedef Vector<BaseType, Dynamic> Vec;
 // #define usi unordered_set<int>
 // #define usl unordered_set<long long>
 
+#define pSimplex_tuple tuple<BaseType, Vec, osl, Vec, ll, ll>
 // void test();
-void pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter);
+pSimplex_tuple
+pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter);
+
+pair<osl, ll> pSimplexAux(Mat A, Vec b);
