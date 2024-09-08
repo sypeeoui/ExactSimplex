@@ -37,6 +37,27 @@ make
 ```
 Gli eseguiti verranno prodotti nella cartella `out/`.
 
+## Solve PL
+
+Per risolvere un problema di PL della forma
+$$ \min c^T x \quad \text{s.t.} \quad Ax = b, x \geq 0 $$
+
+Creare un file di testo contenente i seguenti parametri (solo numeri interi) in ordine separati da spazi o a capo
+```
+len(c)
+len(b)
+b
+A
+c
+max_iterations
+```
+
+Eseguire con 
+```bash
+./out/solvePL testcases/test1.txt
+```
+Il programma avvierà prima il simplesso primale ausiliario per trovare una base ammissibile e poi il simplesso primale e ritornerà la soluzione ottima.
+
 ## Autore
 
 Suqi Chen

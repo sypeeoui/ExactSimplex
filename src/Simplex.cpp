@@ -1,5 +1,11 @@
 #include "Simplex.h"
-
+#ifdef USE_DOUBLE
+    const BaseType tol = 1e-2;
+#elif USE_FLOAT
+    const BaseType tol = 1e-1;
+#else
+    const BaseType tol = 0;
+#endif
 // void test() {
 //     cout << "Hello " << 10/2_r << endl;
 //     Mat m(3,3);
@@ -42,6 +48,8 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
     //  0 max_iter reached
     //  1 optimal
     // iter;
+
+    bool feasible_checked = false;
     
     cout << "----- pSimplex -----" << endl;
     cout << "c = " << endl << c.transpose() << endl;
@@ -112,12 +120,13 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "-----" << endl;
 
         // check if it's feasible
-        if (iter == 0) {
+        if (!feasible_checked) {
             bool feasible = true;
+            feasible_checked = true;
             cout << "Check if it's feasible" << endl;
 
             for (ll i = 0; i < b.size(); i++) {
-                if (b(i) - A.row(i).dot(xB) < 0) {
+                if (b(i) - A.row(i).dot(xB) < -tol) {
                     cout << "++++++++++++++++++++++++++++++" << endl;
                     cout << "Infeasible base" << endl;
                     cout << "++++++++++++++++++++++++++++++" << endl;
@@ -132,7 +141,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "Check if yB >= 0" << endl;
         bool yB_geq_0 = true;
         for (ll i = 0; i < yB.size(); i++) {
-            if (yB(i) < 0) {
+            if (yB(i) < -tol) {
                 yB_geq_0 = false;
                 break;
             }
@@ -153,7 +162,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         // Find the outgoing index
         ll h;
         for (ll i = 0; i < yB.size(); i++) {
-            if (yB(i) < 0) {
+            if (yB(i) < -tol) {
                 h = *base.find_by_order(i);
                 break;
             }
@@ -181,7 +190,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "Check if unbounded" << endl;
         bool unbounded = true;
         for (ll i = 0; i < AWh.size(); i++) {
-            if (AWh(i) > 0) {
+            if (AWh(i) > tol) {
                 unbounded = false;
                 break;
             }
@@ -193,6 +202,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
             (xB.dot(c), xB, base, yB, -5, iter);
         }
 
+        cout << "calculating ratios..." << endl;
         // ratios
         // find the incoming index
         ll k = 0;
@@ -200,8 +210,8 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         ridx = 0;
 
         for (ll i = 0; i < A.rows(); i++) {
-            if (AWh(i) > 0) {
-                // cout << b(i) << " - " << A.row(i).dot(xB) << " / " << AWh(i) << " = " << (b(i) - A.row(i).dot(xB)) / AWh(i) << endl;
+            if (AWh(i) > tol) {
+                // cout << (b(i) - A.row(i).dot(xB)) / AWh(i)<< endl;
                 BaseType rvalue = (b(i) - A.row(i).dot(xB)) / AWh(i);
                 ratio(ridx) = rvalue;
                 keyratio(ridx++) = i;
@@ -270,7 +280,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
 
     bool feasible = true;
     for (ll i = 0; i < b.size(); i++) {
-        if (A.row(i).dot(xB) > b(i)) {
+        if (A.row(i).dot(xB) > b(i) - tol) {
             feasible = false;
             break;
         }
@@ -288,7 +298,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
 
     osl U, V;
     for (ll i = nVar; i < nCon; i++) {
-        if (A.row(i).dot(xB) > b(i)) {
+        if (A.row(i).dot(xB) > b(i) - tol) {
             V.insert(i);
         } else {
             U.insert(i);
@@ -366,6 +376,9 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
         for (auto i : baseAux) {
             if (i < nCon) {
                 base.insert(i);
+            }
+            if (base.size() == nVar) {
+                break;
             }
         }
         return make_pair(base, iter);
