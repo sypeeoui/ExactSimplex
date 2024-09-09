@@ -1,8 +1,8 @@
 #include "Simplex.h"
 #ifdef USE_DOUBLE
-    const BaseType tol = 1e-2;
+    const BaseType tol = 1e-4;
 #elif USE_FLOAT
-    const BaseType tol = 1e-1;
+    const BaseType tol = 1e-2;
 #else
     const BaseType tol = 0;
 #endif
@@ -15,6 +15,48 @@
 
 //     cout << m << endl;
 // }
+
+Mat inverse(Mat A) {
+    // implement the inverse function using gauss-jordan elimination
+    // cout << "A = " << endl << A << endl;
+    ll n = A.rows();
+    Mat B = Mat::Identity(n, n);
+    Mat P = Mat::Identity(n, n); // Permutation matrix
+    // cout << "B = " << endl << B << endl;
+    for (ll i = 0; i < n; i++) {
+        BaseType pivot = A(i, i);
+        if (pivot == 0) {
+            cout << "Sono qua dentro" << endl;
+            // find the pivot
+            ll pivot_idx = -1;
+            for (ll j = i + 1; j < n; j++) {
+                if (A(j, i) != 0) {
+                    pivot_idx = j;
+                    break;
+                }
+            }
+            if (pivot_idx == -1) {
+                throw runtime_error("Pivot is zero");
+                return Mat::Zero(n, n);
+            }
+
+            cout << "pivot_idx = " << pivot_idx << endl;
+            // swap rows
+            A.row(i).swap(A.row(pivot_idx));
+            B.row(i).swap(B.row(pivot_idx));
+            pivot = A(i, i);
+        }
+        A.row(i) /= pivot;
+        B.row(i) /= pivot;
+        for (ll j = 0; j < n; j++) {
+            if (j == i) continue;
+            BaseType factor = A(j, i);
+            A.row(j) -= factor * A.row(i);
+            B.row(j) -= factor * B.row(i);
+        }
+    }
+    return B;
+}
 
 pSimplex_tuple
 pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
@@ -96,19 +138,25 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
                 N.row(Nidx++) = A.row(i);
             }
         }
-        if (B.determinant() == 0) {
-            cout << "Error: Linear dependent base" << endl;
-            return pSimplex_tuple
-            (xB.dot(c), xB, base, yB, -3, iter);
-        }
-        Binv = B.inverse();
+        cout << "B = " << endl << B << endl;
+        cout << "-----" << endl;
+
+        // if (B.determinant() == 0) {
+        //     cout << "B = " << endl << B << endl;
+        //     cout << "Error: Linear dependent base" << endl;
+        //     return pSimplex_tuple
+        //     (xB.dot(c), xB, base, yB, -3, iter);
+        // }
+        Binv = inverse(B);
         xB = Binv * bB; 
         yB = c.transpose() * Binv;
 
 
-        cout << "B = " << endl << B << endl;
-        cout << "-----" << endl;
         cout << "Binv = " << endl << Binv << endl;
+        cout << "-----" << endl;
+        // cout << "B.inverse()" << endl << B.inverse() << endl;
+        // cout << "-----" << endl;
+        // cout << "B.inverse()*B" << endl << B.inverse()*B << endl;
         cout << "-----" << endl;
         cout << "N = " << endl << N << endl;
         cout << "-----" << endl;
@@ -124,7 +172,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
             bool feasible = true;
             feasible_checked = true;
             cout << "Check if it's feasible" << endl;
-
+            cout << "tol = " << tol << endl;
             for (ll i = 0; i < b.size(); i++) {
                 if (b(i) - A.row(i).dot(xB) < -tol) {
                     cout << "++++++++++++++++++++++++++++++" << endl;
@@ -261,7 +309,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
         B.row(i) = A.row(i);
         bB(bIdx++) = b(i);
     }
-    Binv = B.inverse();
+    Binv = inverse(B);
     xB = Binv * bB;
 
     cout << "----- pSimplexAux -----" << endl;
@@ -280,7 +328,9 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
 
     bool feasible = true;
     for (ll i = 0; i < b.size(); i++) {
-        if (A.row(i).dot(xB) > b(i) - tol) {
+        if (A.row(i).dot(xB) > b(i) + tol) {
+            cout << "A.row(" << i << ").dot(xB) = " << A.row(i).dot(xB) << endl;
+            cout << "b(" << i << ") = " << b(i) << endl;
             feasible = false;
             break;
         }
@@ -298,7 +348,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
 
     osl U, V;
     for (ll i = nVar; i < nCon; i++) {
-        if (A.row(i).dot(xB) > b(i) - tol) {
+        if (A.row(i).dot(xB) > b(i) + tol) {
             V.insert(i);
         } else {
             U.insert(i);

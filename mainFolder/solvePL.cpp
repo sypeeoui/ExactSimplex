@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     Vec c = Vec(csize);
     Mat A = Mat(bsize, csize);
     Vec b = Vec(bsize);
-    int aux;
+    ll aux;
     for(ll i = 0; i < csize; i++) {
         cin >> aux;
         c(i) = aux;
