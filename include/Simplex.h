@@ -5,6 +5,8 @@
 // #include <unordered_set>
 #include <ext/pb_ds/assoc_container.hpp> 
 #include <ext/pb_ds/tree_policy.hpp> 
+#include <gmpxx.h>
+
 using namespace std;
 using namespace tcb::rational_literals;
 using namespace tcb;
@@ -16,6 +18,8 @@ using namespace Eigen;
     using BaseType = float;
 #elif USE_RATIONAL_INT
     using BaseType = rational<int>;
+#elif USE_MPQ
+    using BaseType = mpq_class;
 #else
     using BaseType = rational<long long>;
 #endif

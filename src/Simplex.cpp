@@ -1,8 +1,10 @@
 #include "Simplex.h"
 #ifdef USE_DOUBLE
-    const BaseType tol = 1e-4;
+    const BaseType tol = 1e-5;
 #elif USE_FLOAT
     const BaseType tol = 1e-2;
+#elif USE_MPQ
+    const BaseType tol = 0;
 #else
     const BaseType tol = 0;
 #endif
@@ -136,8 +138,8 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
                 N.row(Nidx++) = A.row(i);
             }
         }
-        cout << "B = " << endl << B << endl;
-        cout << "-----" << endl;
+        // cout << "B = " << endl << B << endl;
+        // cout << "-----" << endl;
 
         // if (B.determinant() == 0) {
         //     cout << "B = " << endl << B << endl;
@@ -150,20 +152,22 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         yB = c.transpose() * Binv;
 
 
-        cout << "Binv = " << endl << Binv << endl;
-        cout << "-----" << endl;
-        // cout << "B.inverse()" << endl << B.inverse() << endl;
+        // cout << "Binv = " << endl << Binv << endl;
         // cout << "-----" << endl;
-        // cout << "B.inverse()*B" << endl << B.inverse()*B << endl;
-        cout << "-----" << endl;
-        cout << "N = " << endl << N << endl;
-        cout << "-----" << endl;
-        cout << "bB = " << endl << bB.transpose() << endl;
-        cout << "-----" << endl;
-        cout << "xB = " << endl << xB.transpose() << endl;
-        cout << "-----" << endl;
-        cout << "yB = " << endl << yB.transpose() << endl;
-        cout << "-----" << endl;
+        // // cout << "B.inverse()" << endl << B.inverse() << endl;
+        // // cout << "-----" << endl;
+        // // cout << "B.inverse()*B" << endl << B.inverse()*B << endl;
+        // cout << "-----" << endl;
+        // cout << "N = " << endl << N << endl;
+        // cout << "-----" << endl;
+        // cout << "bB = " << endl << bB.transpose() << endl;
+        // cout << "-----" << endl;
+        // cout << "xB = " << endl << xB.transpose() << endl;
+        // cout << "-----" << endl;
+        // cout << "yB = " << endl << yB.transpose() << endl;
+        // cout << "-----" << endl;
+        // cout << "fObj = " << xB.dot(c) << endl;
+        // cout << "-----" << endl;
 
         // check if it's feasible
         if (!feasible_checked) {
@@ -184,7 +188,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         }
 
 
-        cout << "Check if yB >= 0" << endl;
+        // cout << "Check if yB >= 0" << endl;
         bool yB_geq_0 = true;
         for (ll i = 0; i < yB.size(); i++) {
             if (yB(i) < -tol) {
@@ -219,19 +223,19 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "-------" << endl;
 
         W = -Binv;
-        cout << "W = " << endl << W << endl;
-        cout << "-----" << endl;
+        // cout << "W = " << endl << W << endl;
+        // cout << "-----" << endl;
 
         Wh = W.col(base.order_of_key(h));
 
-        cout << "Wh = " << endl << Wh.transpose() << endl;
-        cout << "-----" << endl;
+        // cout << "Wh = " << endl << Wh.transpose() << endl;
+        // cout << "-----" << endl;
 
 
         AWh = A * Wh;
 
-        cout << "AWh = " << endl << AWh.transpose() << endl;
-        cout << "-----" << endl;
+        // cout << "AWh = " << endl << AWh.transpose() << endl;
+        // cout << "-----" << endl;
 
         cout << "Check if unbounded" << endl;
         bool unbounded = true;
@@ -260,7 +264,11 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
                 // cout << (b(i) - A.row(i).dot(xB)) / AWh(i)<< endl;
                 BaseType rvalue = (b(i) - A.row(i).dot(xB)) / AWh(i);
                 ratio(ridx) = rvalue;
-                keyratio(ridx++) = i;
+                #ifdef USE_MPQ
+                    keyratio(ridx++) = to_string(i);
+                #else
+                    keyratio(ridx++) = i;
+                #endif
                 if (theta == -1 || rvalue < theta) {
                     theta = rvalue;
                     k = i;
@@ -272,15 +280,24 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "-------" << endl;
         cout << "theta = " << theta << endl;
         cout << "-------" << endl;
+
+        cout << "-----" << endl;
+        cout << "xB = " << endl << xB.transpose() << endl;
+        cout << "-----" << endl;
+        cout << "yB = " << endl << yB.transpose() << endl;
+
         cout << "k = " << k << endl;
         cout << "-------" << endl;
 
         base.erase(h);
         base.insert(k);
-
+        cout << "-----" << endl;
         cout << "base = " << endl;
         for(auto i : base) cout << i << " ";
         cout << endl;
+
+        cout << "fObj = " << xB.dot(c) << endl;
+        cout << "-----" << endl;
 
     }
 
@@ -315,20 +332,20 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
     cout << "-----" << endl;
     cout << "b = " << endl << b.transpose() << endl;
     cout << "-----" << endl;
-    cout << "base = " << endl;
-    for(auto i : base) cout << i << " ";
-    cout << endl;
-    cout << "-----" << endl;
-    cout << "B = " << endl << B << endl;
-    cout << "-----" << endl;
-    cout << "xB = " << endl << xB.transpose() << endl;
-    cout << "-----" << endl;
+    // cout << "base = " << endl;
+    // for(auto i : base) cout << i << " ";
+    // cout << endl;
+    // cout << "-----" << endl;
+    // cout << "B = " << endl << B << endl;
+    // cout << "-----" << endl;
+    // cout << "xB = " << endl << xB.transpose() << endl;
+    // cout << "-----" << endl;
 
     bool feasible = true;
     for (ll i = 0; i < b.size(); i++) {
         if (A.row(i).dot(xB) > b(i) + tol) {
-            cout << "A.row(" << i << ").dot(xB) = " << A.row(i).dot(xB) << endl;
-            cout << "b(" << i << ") = " << b(i) << endl;
+            // cout << "A.row(" << i << ").dot(xB) = " << A.row(i).dot(xB) << endl;
+            // cout << "b(" << i << ") = " << b(i) << endl;
             feasible = false;
             break;
         }
@@ -352,15 +369,15 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
             U.insert(i);
         }
     }
-    cout << "-----" << endl;
-    cout << "U = " << endl;
-    for(auto i : U) cout << i << " ";
-    cout << endl;
-    cout << "-----" << endl;
-    cout << "V = " << endl;
-    for(auto i : V) cout << i << " ";
-    cout << endl;
-    cout << "-----" << endl;
+    // cout << "-----" << endl;
+    // cout << "U = " << endl;
+    // for(auto i : U) cout << i << " ";
+    // cout << endl;
+    // cout << "-----" << endl;
+    // cout << "V = " << endl;
+    // for(auto i : V) cout << i << " ";
+    // cout << endl;
+    // cout << "-----" << endl;
 
     ll nConAux = nCon + V.size();
     ll nVarAux = nVar + V.size();

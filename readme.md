@@ -30,9 +30,9 @@ cmake CMakeLists.txt
 make
 ```
 
-Se si vuole usare un tipo `(DOUBLE, FLOAT, RATIONAL_INT, DEFAULT)` diverso usare la flag `-DDUSE_TYPE=DOUBLE`
+Se si vuole usare un tipo `(DOUBLE, FLOAT, RATIONAL_INT, RATIONAL_LONG_LONG, MPQ, DEFAULT)` diverso usare la flag `-DDUSE_TYPE=MPQ`
 ```bash
-cmake -DUSE_TYPE=DOUBLE CMakeLists.txt
+cmake -DUSE_TYPE=DEFAULT CMakeLists.txt
 make
 ```
 Gli eseguiti verranno prodotti nella cartella `out/`.
@@ -64,6 +64,14 @@ Script in python per generare i testcases di Klee-Minty
 ```bash
 python3 testcases/klee_minty.py n
 ```
+
+## Random Feasible
+
+Script in python per generare un problema di PL casuale con soluzione ammissibile. Utile per creare testcase pesanti.
+```bash
+python3 testcases/random_feasible.py len(c) len(b)
+```
+
 ## Autore
 
 Suqi Chen
@@ -84,14 +92,17 @@ Marco Cococcioni
 
 - [X] Preliminari
   - [X] Leggere i paper
-  - [X] Scegliere le librerie da usare -> **Eigen, tcb/rational**
+  - [X] Scegliere le librerie da usare -> **Eigen, tcb/rational, MPQ**
 - [X] Implementazione l'algoritmo del simplesso
   - [X] setup/cMake per Eigen e tcb/rational
   - [X] Implementazione pSimplex
   - [X] Implementazione pSimplexAux
   - [X] Rendere il codice funzionante per i numeri razionali/double
+  - [X] Uso di MPQ per implementare razionali a precisione arbitraria
 - [ ] Testing e applicazioni (confronto con la versione floating point)
   - [X] Implementazione solvePL per testcase
   - [X] Testcase da prove d'esame di Ricerca Operativa
   - [X] Implementazione Klee-Minty per generare testcase
+  - [ ] Implementazione random_feasible per generare testcase pesanti
+
 - [ ] Relazione / Presentazione

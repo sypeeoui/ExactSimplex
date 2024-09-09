@@ -17,7 +17,11 @@ int main(int argc, char* argv[]) {
     Vec c = Vec(csize);
     Mat A = Mat(bsize, csize);
     Vec b = Vec(bsize);
-    ll aux;
+    #ifdef USE_MPQ
+        mpq_class aux;
+    #else
+        ll aux;
+    #endif
     for(ll i = 0; i < csize; i++) {
         cin >> aux;
         c(i) = aux;
@@ -27,6 +31,7 @@ int main(int argc, char* argv[]) {
         for(ll j = 0; j < csize; j++) {
             cin >> aux;
             A(i, j) = aux;
+
         }
     }
     for(ll i = 0; i < bsize; i++) {
