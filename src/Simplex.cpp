@@ -26,7 +26,6 @@ Mat inverse(Mat A) {
     for (ll i = 0; i < n; i++) {
         BaseType pivot = A(i, i);
         if (pivot == 0) {
-            cout << "Sono qua dentro" << endl;
             // find the pivot
             ll pivot_idx = -1;
             for (ll j = i + 1; j < n; j++) {
@@ -40,7 +39,6 @@ Mat inverse(Mat A) {
                 return Mat::Zero(n, n);
             }
 
-            cout << "pivot_idx = " << pivot_idx << endl;
             // swap rows
             A.row(i).swap(A.row(pivot_idx));
             B.row(i).swap(B.row(pivot_idx));

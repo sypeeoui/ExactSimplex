@@ -36,3 +36,7 @@ dependencies/
 # Ignore localtest
 localtest/
 lt_*
+
+# Ignore gdb
+.gdbinit
+.gdb_history

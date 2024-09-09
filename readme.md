@@ -58,6 +58,12 @@ Eseguire con
 ```
 Il programma avvierà prima il simplesso primale ausiliario per trovare una base ammissibile e poi il simplesso primale e ritornerà la soluzione ottima.
 
+## Klee-Minty
+
+Script in python per generare i testcases di Klee-Minty
+```bash
+python3 testcases/klee_minty.py n
+```
 ## Autore
 
 Suqi Chen
@@ -76,15 +82,16 @@ Marco Cococcioni
 
 ## TODO
 
-- [ ] Preliminari
+- [X] Preliminari
   - [X] Leggere i paper
   - [X] Scegliere le librerie da usare -> **Eigen, tcb/rational**
-  - [ ] 
-- [ ] Implementazione l'algoritmo del simplesso
+- [X] Implementazione l'algoritmo del simplesso
   - [X] setup/cMake per Eigen e tcb/rational
-  - [ ] Definizione elementi della classe `Simplex`
-  - [ ] Implementazione della funzione `solve`
-  - [ ] 
-  - [X] Aggiunta numeri razionali -> **Opzione a livello di cmake**
+  - [X] Implementazione pSimplex
+  - [X] Implementazione pSimplexAux
+  - [X] Rendere il codice funzionante per i numeri razionali/double
 - [ ] Testing e applicazioni (confronto con la versione floating point)
+  - [X] Implementazione solvePL per testcase
+  - [X] Testcase da prove d'esame di Ricerca Operativa
+  - [X] Implementazione Klee-Minty per generare testcase
 - [ ] Relazione / Presentazione
