@@ -20,6 +20,8 @@ using namespace Eigen;
     using BaseType = rational<int>;
 #elif USE_MPQ
     using BaseType = mpq_class;
+#elif USE_MPF
+    using BaseType = mpf_class;
 #else
     using BaseType = rational<long long>;
 #endif

@@ -35,6 +35,13 @@ Se si vuole usare un tipo `(DOUBLE, FLOAT, RATIONAL_INT, RATIONAL_LONG_LONG, MPQ
 cmake -DUSE_TYPE=DEFAULT CMakeLists.txt
 make
 ```
+
+nel caso di MPF è possibile specificare la precisione con la flag `-DPRECISION=256`
+```bash
+cmake -DUSE_TYPE=MPF -DPRECISION=256 CMakeLists.txt
+make
+```
+
 Gli eseguiti verranno prodotti nella cartella `out/`.
 
 ## Solve PL
@@ -54,7 +61,7 @@ max_iterations
 
 Eseguire con 
 ```bash
-./out/solvePL testcases/test1.txt
+./out/solvePL < testcases/test1.txt
 ```
 Il programma avvierà prima il simplesso primale ausiliario per trovare una base ammissibile e poi il simplesso primale e ritornerà la soluzione ottima.
 
@@ -65,12 +72,25 @@ Script in python per generare i testcases di Klee-Minty
 python3 testcases/klee_minty.py n
 ```
 
+**Esempio**
+
+```bash
+python3 testcases/klee_minty.py 25 | ./out/solvePL
+```
+
 ## Random Feasible
 
 Script in python per generare un problema di PL casuale con soluzione ammissibile. Utile per creare testcase pesanti.
 ```bash
 python3 testcases/random_feasible.py len(c) len(b)
 ```
+
+**Esempio**
+
+```bash
+python3 testcases/random_feasible.py 10 35 | ./out/solvePL
+```
+
 
 ## Autore
 
@@ -98,7 +118,7 @@ Marco Cococcioni
   - [X] Implementazione pSimplex
   - [X] Implementazione pSimplexAux
   - [X] Rendere il codice funzionante per i numeri razionali/double
-  - [X] Uso di MPQ per implementare razionali a precisione arbitraria
+  - [X] Uso di MPQ e MPF per implementare razionali/reali a precisione arbitraria
 - [ ] Testing e applicazioni (confronto con la versione floating point)
   - [X] Implementazione solvePL per testcase
   - [X] Testcase da prove d'esame di Ricerca Operativa

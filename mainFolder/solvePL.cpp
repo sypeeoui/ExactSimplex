@@ -2,16 +2,19 @@
 #include "Simplex.h" // Include the Simplex header file
 #include <cstdio>
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input_file>" << std::endl;
-        return 1;
-    }
+    // if (argc < 2) {
+    //     std::cout << "Usage: " << argv[0] << " <input_file>" << std::endl;
+    //     return 1;
+    // }
 
-    freopen(argv[1], "r", stdin);
+    // freopen(argv[1], "r", stdin);
+    cout << "Precision = " << PRECISION << endl;
 
     ll csize;
+    cout << "csize = ";
     cin >> csize;
     ll bsize;
+    cout << "bsize = ";
     cin >> bsize;
 
     Vec c = Vec(csize);
@@ -19,14 +22,19 @@ int main(int argc, char* argv[]) {
     Vec b = Vec(bsize);
     #ifdef USE_MPQ
         mpq_class aux;
+    #elif USE_MPF
+        mpf_class aux;
+        mpf_set_default_prec(PRECISION);
     #else
         ll aux;
     #endif
+    cout << "c = ";
     for(ll i = 0; i < csize; i++) {
         cin >> aux;
         c(i) = aux;
         
     }
+    cout << "A = " << endl;
     for(ll i = 0; i < bsize; i++) {
         for(ll j = 0; j < csize; j++) {
             cin >> aux;
@@ -34,6 +42,7 @@ int main(int argc, char* argv[]) {
 
         }
     }
+    cout << "b = ";
     for(ll i = 0; i < bsize; i++) {
         cin >> aux;
         b(i) = aux;

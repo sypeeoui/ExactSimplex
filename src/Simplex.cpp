@@ -5,6 +5,11 @@
     const BaseType tol = 1e-2;
 #elif USE_MPQ
     const BaseType tol = 0;
+#elif USE_MPF
+    // 
+    string prec = to_string((int)(PRECISION/16));
+    string strprec = "1e-" + prec;
+    const BaseType tol(strprec);
 #else
     const BaseType tol = 0;
 #endif
@@ -17,7 +22,18 @@
 
 //     cout << m << endl;
 // }
-
+#if defined(USE_MPQ)
+    int get_sign(BaseType x) {
+        return (x < 0 ? -1 : (x > 0 ? 1 : 0) );
+    }
+#else
+    int get_sign(BaseType x) {
+        // if (x == 0) return 0;
+        // return -signbit(x);
+        return x < -tol ? -1 : x > tol;
+        // return (x < 0 ? -1 : (x > 0 ? 1 : 0) );
+    }
+#endif
 Mat inverse(Mat A) {
     // implement the inverse function using gauss-jordan elimination
     // cout << "A = " << endl << A << endl;
@@ -103,6 +119,10 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
     cout << "base = " << endl;
     for(auto i : base) cout << i << " ";
     cout << endl;
+    cout << "-----" << endl;
+    cout << "max_iter = " << max_iter << endl;
+    cout << "-----" << endl;
+    cout << "tol = " << tol << endl;
 
     if (c.size() != A.cols()) {
         cout << "Error: c.size() != A.cols()" << endl;
@@ -175,7 +195,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
             cout << "Check if it's feasible" << endl;
             cout << "tol = " << tol << endl;
             for (ll i = 0; i < b.size(); i++) {
-                if (b(i) - A.row(i).dot(xB) < -tol) {
+                if (get_sign(b(i) - A.row(i).dot(xB)) == -1) {
                     cout << "++++++++++++++++++++++++++++++" << endl;
                     cout << "Infeasible base" << endl;
                     cout << "++++++++++++++++++++++++++++++" << endl;
@@ -190,7 +210,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         // cout << "Check if yB >= 0" << endl;
         bool yB_geq_0 = true;
         for (ll i = 0; i < yB.size(); i++) {
-            if (yB(i) < -tol) {
+            if (get_sign(yB(i)) == -1) {
                 yB_geq_0 = false;
                 break;
             }
@@ -211,7 +231,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         // Find the outgoing index
         ll h;
         for (ll i = 0; i < yB.size(); i++) {
-            if (yB(i) < -tol) {
+            if (get_sign(yB(i)) == -1) {
                 h = *base.find_by_order(i);
                 break;
             }
@@ -239,7 +259,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "Check if unbounded" << endl;
         bool unbounded = true;
         for (ll i = 0; i < AWh.size(); i++) {
-            if (AWh(i) > tol) {
+            if (get_sign(AWh(i)) == 1) {
                 unbounded = false;
                 break;
             }
@@ -256,18 +276,15 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         // find the incoming index
         ll k = 0;
         BaseType theta = -1;
+        
         ridx = 0;
 
-        for (ll i = 0; i < A.rows(); i++) {
-            if (AWh(i) > tol) {
+        for (int i = 0; i < A.rows(); i++) {
+            if (get_sign(AWh(i)) == 1) {
                 // cout << (b(i) - A.row(i).dot(xB)) / AWh(i)<< endl;
                 BaseType rvalue = (b(i) - A.row(i).dot(xB)) / AWh(i);
                 ratio(ridx) = rvalue;
-                #ifdef USE_MPQ
-                    keyratio(ridx++) = to_string(i);
-                #else
-                    keyratio(ridx++) = i;
-                #endif
+                keyratio(ridx++) = i;
                 if (theta == -1 || rvalue < theta) {
                     theta = rvalue;
                     k = i;
@@ -297,7 +314,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "-----" << endl;
 
         cout << "fObj = " << xB.dot(c) << endl;
-        #ifdef USE_MPQ
+        #if defined(USE_MPQ) || defined(USE_MPF)
             cout << "double = " << xB.dot(c).get_d() << endl;
         #else
             cout << "double = " << (double)xB.dot(c) << endl;
@@ -351,7 +368,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
 
     bool feasible = true;
     for (ll i = 0; i < b.size(); i++) {
-        if (A.row(i).dot(xB) > b(i) + tol) {
+        if (get_sign(A.row(i).dot(xB)-b(i))  == 1) {
             // cout << "A.row(" << i << ").dot(xB) = " << A.row(i).dot(xB) << endl;
             // cout << "b(" << i << ") = " << b(i) << endl;
             feasible = false;
@@ -371,7 +388,9 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
 
     osl U, V;
     for (ll i = nVar; i < nCon; i++) {
-        if (A.row(i).dot(xB) > b(i) + tol) {
+        cout << A.row(i).dot(xB) - b(i) << endl;
+        cout << get_sign(A.row(i).dot(xB) - b(i)) << endl;
+        if (get_sign(A.row(i).dot(xB) - b(i)) == 1) {
             V.insert(i);
         } else {
             U.insert(i);
@@ -382,8 +401,8 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     // for(auto i : U) cout << i << " ";
     // cout << endl;
     // cout << "-----" << endl;
-    // cout << "V = " << endl;
-    // for(auto i : V) cout << i << " ";
+    cout << "V = " << endl;
+    for(auto i : V) cout << i << " ";
     // cout << endl;
     // cout << "-----" << endl;
 
