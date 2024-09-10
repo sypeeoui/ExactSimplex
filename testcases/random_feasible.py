@@ -16,9 +16,15 @@ def generate_random_feasible_lp_integers(n, m):
 
     # Calculate b as A * x to ensure feasibility
     b = A @ x
+    # Add noise to m - n elements of b 
+    noised_indices = np.random.choice(m, m - n, replace=False)
+    noise = np.random.randint(0, max_val**2, size=m - n)
+    b[noised_indices] += noise
     
     # Generate random objective function coefficients c with integer values within the range
     c = np.random.randint(min_val, max_val + 1, size=n)
+    # for i in range(n):
+    #     c[i] = c[i] * np.sign(x[i])
 
     # Maximum number of iterations (arbitrary for random LP)
     max_iterations = n*m

@@ -48,4 +48,4 @@ typedef Vector<BaseType, Dynamic> Vec;
 pSimplex_tuple
 pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter);
 
-pair<osl, ll> pSimplexAux(Mat A, Vec b);
+pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter);

@@ -116,7 +116,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
     }
     if (A.cols() != base.size()) {
         cout << "Base not setted, using auxiliary problem..." << endl;
-        pair<osl, ll> AuxAnswer = pSimplexAux(A, b);
+        pair<osl, ll> AuxAnswer = pSimplexAux(A, b, max_iter);
         base = AuxAnswer.first;
         iter = AuxAnswer.second;
     }
@@ -128,7 +128,6 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
 
         ll Nidx = 0;
         ll key;
-
         for (ll i = 0; i < A.rows(); i++) {
             if (base.find(i) != base.end()) {
                     key = base.order_of_key(i);
@@ -275,16 +274,16 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
                 }
             } 
         }
-        cout << "-------" << endl;
-        cout << "ratio = " << endl << ratio.transpose() << endl;
-        cout << "-------" << endl;
-        cout << "theta = " << theta << endl;
-        cout << "-------" << endl;
+        // cout << "-------" << endl;
+        // cout << "ratio = " << endl << ratio.transpose() << endl;
+        // cout << "-------" << endl;
+        // cout << "theta = " << theta << endl;
+        // cout << "-------" << endl;
 
-        cout << "-----" << endl;
-        cout << "xB = " << endl << xB.transpose() << endl;
-        cout << "-----" << endl;
-        cout << "yB = " << endl << yB.transpose() << endl;
+        // cout << "-----" << endl;
+        // cout << "xB = " << endl << xB.transpose() << endl;
+        // cout << "-----" << endl;
+        // cout << "yB = " << endl << yB.transpose() << endl;
 
         cout << "k = " << k << endl;
         cout << "-------" << endl;
@@ -295,18 +294,27 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "base = " << endl;
         for(auto i : base) cout << i << " ";
         cout << endl;
+        cout << "-----" << endl;
 
         cout << "fObj = " << xB.dot(c) << endl;
+        #ifdef USE_MPQ
+            cout << "double = " << xB.dot(c).get_d() << endl;
+        #else
+            cout << "double = " << (double)xB.dot(c) << endl;
+        #endif
         cout << "-----" << endl;
 
     }
+    cout << "++++++++++++++++++++++++++++++" << endl;
+    cout << "Max iter reached" << endl;
+    cout << "++++++++++++++++++++++++++++++" << endl;
 
     return pSimplex_tuple
     (xB.dot(c), xB, base, yB, 0, iter);
 
 }
 
-pair<osl, ll> pSimplexAux(Mat A, Vec b) {
+pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     ll iter = 0;
     ll nVar = A.cols();
     ll nCon = A.rows();
@@ -424,7 +432,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
     cout << "baseAux = " << endl;
     for(auto i : baseAux) cout << i << " ";
     cout << endl;
-    pSimplex_tuple answer = pSimplex(cAux, Aaux, baux, baseAux, 100);
+    pSimplex_tuple answer = pSimplex(cAux, Aaux, baux, baseAux, max_iter);
 
     if (get<4>(answer) == 1) {
         cout << "++++++++++++++++++++++++++++++" << endl;
@@ -449,7 +457,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b) {
         return make_pair(base, iter);
     } else {
         cout << "++++++++++++++++++++++++++++++" << endl;
-        cout << "Auxiliary problem failed" << endl;
+        cout << "Auxiliary problem failed. flag = " << get<4>(answer) << endl;
         cout << "++++++++++++++++++++++++++++++" << endl;
         return make_pair(base, iter);
     }
