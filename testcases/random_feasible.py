@@ -2,11 +2,15 @@
 import argparse
 import numpy as np
 
-def generate_random_feasible_lp_integers(n, m):
+def generate_random_feasible_lp_integers(n, m, max_val):
     # Calculate the range based on the product of len(c) * len(b)
     product_len = (n * m)**2
-    min_val = -product_len
-    max_val = product_len
+    if max_val == -1:
+        min_val = -product_len
+        max_val = product_len
+    else:
+        min_val = -max_val
+    # print(f"Min val: {min_val}, Max val: {max_val}")
     
     # Generate a random feasible solution x with integer values within the range
     x = np.random.randint(min_val, max_val + 1, size=n)
@@ -53,7 +57,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate a random feasible LP problem with integer values based on len(c) * len(b)")
     parser.add_argument("n", type=int, help="Number of variables (dimension of x)")
     parser.add_argument("m", type=int, help="Number of constraints (number of rows in A)")
+    parser.add_argument("max_val", type=int, nargs='?', default=-1, help="Maximum value for the random coefficients")
     args = parser.parse_args()
     
-    c, b, A, max_iterations = generate_random_feasible_lp_integers(args.n, args.m)
+    c, b, A, max_iterations = generate_random_feasible_lp_integers(args.n, args.m, args.max_val)
     print_problem(c, b, A, max_iterations)

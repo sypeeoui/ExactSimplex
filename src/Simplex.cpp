@@ -34,7 +34,8 @@
         // return (x < 0 ? -1 : (x > 0 ? 1 : 0) );
     }
 #endif
-Mat inverse(Mat A) {
+// #if defined(USE_RATIONAL) || defined(USE_RATIONAL_LONG_LONG)
+    Mat inverse(Mat A) {
     // implement the inverse function using gauss-jordan elimination
     // cout << "A = " << endl << A << endl;
     ll n = A.rows();
@@ -73,6 +74,28 @@ Mat inverse(Mat A) {
     }
     return B;
 }
+// #else
+// Mat inverse(Mat A) {
+//     return A.inverse();
+// }
+// #endif
+
+// Sherman–Morrison
+Mat inverse_update(Mat Ainv, Vec u, Vec v) {
+    // Ainv = Ainv - Ainv*u*v.T*Ainv / (1 + v*Ainv*u)
+    // cout << "uvt = " << endl << u*v.transpose() << endl;
+    // cout << Ainv.size() << " " << u.size() << " " << v.size() << endl;
+    // cout << "ope 1" << endl;
+    Vec Ainvu = Ainv * u;
+    // cout << "ope 2" << endl;
+    BaseType alpha = 1 / (1 + v.dot(Ainvu));
+    // cout << "ope 3" << endl;
+    Mat vtAinv = v.transpose() * Ainv;
+    // cout << "ope 3.5" << endl;
+    Mat AinvuvAinv = Ainvu * vtAinv;
+    // cout << "ope 4" << endl;
+    return Ainv - alpha * AinvuvAinv;
+}
 
 pSimplex_tuple
 pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
@@ -99,6 +122,10 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
     // base;
     // yB;
     ll flag; 
+    ll h;
+    ll k = 0;
+    ll upindex;
+    ll upindex2;
     //  -100 generic error,
     //  -5 unbounded, 
     //  -3 linear dependent base,
@@ -166,7 +193,27 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         //     return pSimplex_tuple
         //     (xB.dot(c), xB, base, yB, -3, iter);
         // }
-        Binv = inverse(B);
+        // cout << "B = " << endl << B << endl;
+        if (!feasible_checked) {
+            cout << "INVERTING B" << endl;
+            Binv = inverse(B);
+            cout << "INVERTED B" << endl;
+            cout << "-----" << endl;
+        } 
+        // else {
+        //     Vec e = Vec::Zero(A.cols());
+        //     cout << "upindex = " << upindex << endl;
+        //     e(upindex) = 1;
+        //     // cout << "Br =" << endl <<  Binv.row(upindex) << endl;
+        //     cout << "Arkh =" << endl <<  A.row(k) - A.row(h) << endl;
+        //     Vec u = e;
+        //     Vec v = A.row(k) - A.row(h);
+        //     cout << "B-uvt" << endl << Binv - u*v.transpose() << endl;
+        //     cout << "e = " << endl << e.transpose() << endl;
+        //     Binv = inverse_update(Binv, e, A.row(k) - A.row(h));
+        // }
+        // cout << "Binv = " << endl << Binv << endl;
+        // cout << "-----" << endl;
         xB = Binv * bB; 
         yB = c.transpose() * Binv;
 
@@ -229,7 +276,6 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         }
 
         // Find the outgoing index
-        ll h;
         for (ll i = 0; i < yB.size(); i++) {
             if (get_sign(yB(i)) == -1) {
                 h = *base.find_by_order(i);
@@ -274,7 +320,6 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "calculating ratios..." << endl;
         // ratios
         // find the incoming index
-        ll k = 0;
         BaseType theta = -1;
         
         ridx = 0;
@@ -305,6 +350,23 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "k = " << k << endl;
         cout << "-------" << endl;
 
+        cout << "Updating Inverse" << endl;
+        cout << "-------" << endl;
+        upindex = base.order_of_key(h);
+
+        Vec e = Vec::Zero(A.cols());
+        // cout << "upindex = " << upindex << endl;
+        e(upindex) = 1;
+        // cout << "Br =" << endl <<  Binv.row(upindex) << endl;
+        // cout << "Arkh =" << endl <<  A.row(k) - A.row(h) << endl;
+        Vec u = e;
+        Vec v = A.row(k) - A.row(h);
+        // cout << "B-uvt" << endl << B + u*v.transpose() << endl;
+        // cout << "e = " << endl << e.transpose() << endl;
+        Binv = inverse_update(Binv, e, v);
+
+        // cout << "Binv = " << endl << Binv << endl;
+        // cout << "-----" << endl;
         base.erase(h);
         base.insert(k);
         cout << "-----" << endl;
@@ -312,6 +374,51 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         for(auto i : base) cout << i << " ";
         cout << endl;
         cout << "-----" << endl;
+
+        // Permutation matrix
+        upindex2 = base.order_of_key(k);
+        // if (upindex > upindex2) {
+        //     // swap values
+        //     ll temp = upindex;
+        //     upindex = upindex2;
+        //     upindex2 = temp;
+        // }
+        // cout << "upindex = " << upindex << endl;
+        // cout << "upindex2 = " << upindex2 << endl;
+        cout << "Permuting Binv" << endl;
+        cout << "-------" << endl;
+        Mat I = Mat::Identity(A.cols(), A.cols());
+        Mat P = I;
+        // // shift the columns from upindex to upindex2 to the left
+        // if (upindex2 > upindex) {
+        //     P.block(upindex, upindex + 1, upindex2 - upindex, upindex2 - upindex) = I.block(upindex, upindex, upindex2 - upindex, upindex2 - upindex);
+        // }
+        // else {
+        //     P.block(upindex2 + 1, upindex2, upindex - upindex2, upindex - upindex2) = I.block(upindex2, upindex2, upindex - upindex2, upindex - upindex2);
+        // }
+        // P.row(upindex2) = I.row(upindex);
+        // P.col(upindex) = I.col(upindex2);
+
+        // // cout << "P = " << endl << P.transpose() << endl;
+        // // cout << "P = " << endl << P << endl;
+
+        // cout << "-----" << endl;
+        // Binv = Binv * P.transpose();
+        // cout << "upindex = " << upindex << endl;
+        // cout << "upindex2 = " << upindex2 << endl;
+        // cout << "Binv = " << endl << Binv << endl;
+        if (upindex > upindex2) {
+            Vec temp = Binv.col(upindex);
+            Mat temp2 = Binv.block(0, upindex2, Binv.rows(), upindex - upindex2);
+            Binv.block(0, upindex2 + 1, Binv.rows(), upindex - upindex2) = temp2;
+            Binv.col(upindex2) = temp;
+        }
+        else {
+            Vec temp = Binv.col(upindex);
+            Binv.block(0, upindex, Binv.rows(), upindex2 - upindex) = Binv.block(0, upindex + 1, Binv.rows(), upindex2 - upindex);
+            Binv.col(upindex2) = temp;
+        }
+        // cout << "Binv = " << endl << Binv << endl;
 
         cout << "fObj = " << xB.dot(c) << endl;
         #if defined(USE_MPQ) || defined(USE_MPF)
@@ -349,7 +456,10 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
         B.row(i) = A.row(i);
         bB(bIdx++) = b(i);
     }
+    cout << "INVERTING B" << endl;
     Binv = inverse(B);
+    cout << "INVERTED B" << endl;
+    
     xB = Binv * bB;
 
     cout << "----- pSimplexAux -----" << endl;
