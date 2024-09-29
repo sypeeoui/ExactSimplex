@@ -56,8 +56,8 @@ endif()
 # eval TOL AS 1e(-PRECISION//4)
 target_compile_definitions(Simplex PUBLIC PRECISION=${PRECISION} TOL=${TOL})
 
-## Add debug flag
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+## Add debug flag and warning flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Wextra -Wpedantic")
 
 ## Add all executables on the mainFolder directory
 file(GLOB_RECURSE LT_SOURCES "mainFolder/*.cpp")

@@ -6,22 +6,14 @@
 #elif USE_MPQ
     const BaseType tol = 0;
 #elif USE_MPF
-    // 
     string prec = to_string((int)(PRECISION/16));
     string strprec = "1e-" + prec;
     const BaseType tol(strprec);
 #else
     const BaseType tol = 0;
 #endif
-// void test() {
-//     cout << "Hello " << 10/2_r << endl;
-//     Mat m(3,3);
-//     m << 1/5_r, 10/2_r, 3, 4, 5, 6, 7, 8, 9;
-//     m = 2*m;
-//     m(0,1) = 1/5_r;
 
-//     cout << m << endl;
-// }
+
 #if defined(USE_MPQ)
     int get_sign(BaseType x) {
         return (x < 0 ? -1 : (x > 0 ? 1 : 0) );
@@ -35,17 +27,16 @@
     }
 #endif
 // #if defined(USE_RATIONAL) || defined(USE_RATIONAL_LONG_LONG)
-    Mat inverse(Mat A) {
-    // implement the inverse function using gauss-jordan elimination
+Mat inverse(Mat A) {
+    // Implementazione della Gaussian Elimination
     // cout << "A = " << endl << A << endl;
     ll n = A.rows();
     Mat B = Mat::Identity(n, n);
-    Mat P = Mat::Identity(n, n); // Permutation matrix
     // cout << "B = " << endl << B << endl;
     for (ll i = 0; i < n; i++) {
         BaseType pivot = A(i, i);
         if (pivot == 0) {
-            // find the pivot
+            // Trova il pivot
             ll pivot_idx = -1;
             for (ll j = i + 1; j < n; j++) {
                 if (A(j, i) != 0) {
@@ -58,7 +49,7 @@
                 return Mat::Zero(n, n);
             }
 
-            // swap rows
+            // swap righe
             A.row(i).swap(A.row(pivot_idx));
             B.row(i).swap(B.row(pivot_idx));
             pivot = A(i, i);
@@ -80,173 +71,142 @@
 // }
 // #endif
 
-// Sherman–Morrison
+// Sherman-Morrison
 Mat inverse_update(Mat Ainv, Vec u, Vec v) {
-    // Ainv = Ainv - Ainv*u*v.T*Ainv / (1 + v*Ainv*u)
-    // cout << "uvt = " << endl << u*v.transpose() << endl;
-    // cout << Ainv.size() << " " << u.size() << " " << v.size() << endl;
-    // cout << "ope 1" << endl;
+    // implementazione naive 
     Vec Ainvu = Ainv * u;
-    // cout << "ope 2" << endl;
     BaseType alpha = 1 / (1 + v.dot(Ainvu));
-    // cout << "ope 3" << endl;
     Mat vtAinv = v.transpose() * Ainv;
-    // cout << "ope 3.5" << endl;
     Mat AinvuvAinv = Ainvu * vtAinv;
-    // cout << "ope 4" << endl;
     return Ainv - alpha * AinvuvAinv;
 }
 
 pSimplex_tuple
 pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
-    ll iter = 0;
-    Mat B(A.cols(), A.cols());
-    Mat N(A.rows() - A.cols(), A.cols());
-    Mat Binv(A.cols(), A.cols());
-    Mat W(A.cols(), A.cols());
+    auto start = high_resolution_clock::now();
 
-    Vec bB(A.cols());
-    Vec xB(A.cols());
-    Vec yB(A.rows());
+    ll iter = 0; // iteration counter
+    ll nVar = A.cols(); // numero di variabili
+    ll nCon = A.rows(); // numero di vincoli
+
+    Mat B(nVar, nVar); // matrice di base
+    // Mat N(nCon - nVar, nVar); // matrice non di base (Non utilizzata)
+    Mat Binv(nVar, nVar); // inversa di B
+    Mat W(nVar, nVar); // W = -Binv
+
+    Vec bB(nVar); // b di base
+    Vec xB(nVar); // x di base
+    Vec yB(nCon); // y di base
     
-    Vec Wh(A.rows());
-    Vec AWh(A.rows());
+    Vec Wh(nCon); // colonna h di W
+    Vec AWh(nCon); // A*Wh
 
-    Vec ratio(A.rows() - A.cols());
-    Vec keyratio(A.rows() - A.cols());
-    ll ridx;
+    Vec ratio(nCon - nVar); // rapporti
+    Vec keyratio(nCon - nVar); // indici dei rapporti
+    ll ridx; // contatore dei rapporti
 
-    // output variables fObj,xB,B,yB,flag,iter
+    // variabili di output fObj,xB,B,yB,flag,iter
     BaseType fObj;
     // xB;
     // base;
     // yB;
-    ll flag; 
-    ll h;
-    ll k = 0;
-    ll upindex;
-    ll upindex2;
+    // iter;
+
     //  -100 generic error,
     //  -5 unbounded, 
     //  -3 linear dependent base,
     //  -2 infeasible,
     //  0 max_iter reached
     //  1 optimal
-    // iter;
 
-    bool feasible_checked = false;
+    ll h; // indice uscente
+    ll k = 0; // indice entrante
+    ll upindex; // indice1 per l'update dell'inversa
+    ll upindex2; // indice2 per la permutazione
+
+    bool feasible_checked = false; // flag per il primo check di feasability
     
     cout << "----- pSimplex -----" << endl;
-    cout << "c = " << endl << c.transpose() << endl;
-    cout << "-----" << endl;
-    cout << "A = " << endl << A << endl;
-    cout << "-----" << endl;
-    cout << "b = " << endl << b.transpose() << endl;
-    cout << "-----" << endl;
-    cout << "base = " << endl;
-    for(auto i : base) cout << i << " ";
-    cout << endl;
+    // cout << "c = " << endl << c.transpose() << endl;
+    // cout << "-----" << endl;
+    // cout << "A = " << endl << A << endl;
+    // cout << "-----" << endl;
+    // cout << "b = " << endl << b.transpose() << endl;
+    // cout << "-----" << endl;
+    // cout << "base = " << endl;
+    // for(auto i : base) cout << i << " ";
+    // cout << endl;
     cout << "-----" << endl;
     cout << "max_iter = " << max_iter << endl;
     cout << "-----" << endl;
     cout << "tol = " << tol << endl;
+    cout << "-----" << endl;
 
-    if (c.size() != A.cols()) {
-        cout << "Error: c.size() != A.cols()" << endl;
+    // controlli sulle dimentisioni
+    if (c.rows() != nVar) {
+        cout << "Error: c.rows() != nVar" << endl;
         return pSimplex_tuple
         (xB.dot(c), xB, base, yB, -100, iter);
     }
-    if (A.rows() != b.size()) {
-        cout << "Error: A.rows() != b.size()" << endl;
+    if (nCon != b.rows()) {
+        cout << "Error: nCon != b.rows()" << endl;
         return pSimplex_tuple
         (xB.dot(c), xB, base, yB, -100, iter);
     }
-    if (A.cols() != base.size()) {
+    if (nVar != (ll)base.size()) {
+        // avvia il problema ausiliario
         cout << "Base not setted, using auxiliary problem..." << endl;
         pair<osl, ll> AuxAnswer = pSimplexAux(A, b, max_iter);
         base = AuxAnswer.first;
         iter = AuxAnswer.second;
+        cout << "-----" << endl;
+        cout << "Auxiliary problem solved in " << ((duration<double>)(high_resolution_clock::now() - start)).count() << " seconds" << endl;
+        cout << "-----" << endl;
     }
     
 
-    for (iter; iter < max_iter; iter++) {
-        
-        cout << "---- Iteration " << iter << " ----" << endl;
+    // iterazione principale
+    for (; iter < max_iter; iter++) {
+        auto start_iter = high_resolution_clock::now(); // tempo di inizio iterazione
 
-        ll Nidx = 0;
+        cout << "---- Iteration " << iter << " ----" << endl;
+        
+        // ll Nidx = 0;
         ll key;
-        for (ll i = 0; i < A.rows(); i++) {
+        
+        // update di B e bB
+        for (ll i = 0; i < nCon; i++) {
             if (base.find(i) != base.end()) {
                     key = base.order_of_key(i);
                     bB(key) = b(i);
                     B.row(key) = A.row(i);
-            } else {
-                N.row(Nidx++) = A.row(i);
-            }
+            } 
+            // else {
+            //     N.row(Nidx++) = A.row(i);
+            // }
         }
-        // cout << "B = " << endl << B << endl;
-        // cout << "-----" << endl;
 
-        // if (B.determinant() == 0) {
-        //     cout << "B = " << endl << B << endl;
-        //     cout << "Error: Linear dependent base" << endl;
-        //     return pSimplex_tuple
-        //     (xB.dot(c), xB, base, yB, -3, iter);
-        // }
-        // cout << "B = " << endl << B << endl;
+        // se e' la prima iterazione calcola l'inversa
         if (!feasible_checked) {
             cout << "INVERTING B" << endl;
             Binv = inverse(B);
             cout << "INVERTED B" << endl;
             cout << "-----" << endl;
         } 
-        // else {
-        //     Vec e = Vec::Zero(A.cols());
-        //     cout << "upindex = " << upindex << endl;
-        //     e(upindex) = 1;
-        //     // cout << "Br =" << endl <<  Binv.row(upindex) << endl;
-        //     cout << "Arkh =" << endl <<  A.row(k) - A.row(h) << endl;
-        //     Vec u = e;
-        //     Vec v = A.row(k) - A.row(h);
-        //     cout << "B-uvt" << endl << Binv - u*v.transpose() << endl;
-        //     cout << "e = " << endl << e.transpose() << endl;
-        //     Binv = inverse_update(Binv, e, A.row(k) - A.row(h));
-        // }
-        // cout << "Binv = " << endl << Binv << endl;
-        // cout << "-----" << endl;
+
         xB = Binv * bB; 
         yB = c.transpose() * Binv;
 
-
-        // cout << "Binv = " << endl << Binv << endl;
-        // cout << "-----" << endl;
-        // // cout << "B.inverse()" << endl << B.inverse() << endl;
-        // // cout << "-----" << endl;
-        // // cout << "B.inverse()*B" << endl << B.inverse()*B << endl;
-        // cout << "-----" << endl;
-        // cout << "N = " << endl << N << endl;
-        // cout << "-----" << endl;
-        // cout << "bB = " << endl << bB.transpose() << endl;
-        // cout << "-----" << endl;
-        // cout << "xB = " << endl << xB.transpose() << endl;
-        // cout << "-----" << endl;
-        // cout << "yB = " << endl << yB.transpose() << endl;
-        // cout << "-----" << endl;
-        // cout << "fObj = " << xB.dot(c) << endl;
-        // cout << "-----" << endl;
-
-        // check if it's feasible
+        // controlla se la base e' ammissibile
         if (!feasible_checked) {
-            bool feasible = true;
             feasible_checked = true;
             cout << "Check if it's feasible" << endl;
             cout << "tol = " << tol << endl;
-            for (ll i = 0; i < b.size(); i++) {
+            for (ll i = 0; i < b.rows(); i++) {
                 if (get_sign(b(i) - A.row(i).dot(xB)) == -1) {
                     cout << "++++++++++++++++++++++++++++++" << endl;
                     cout << "Infeasible base" << endl;
                     cout << "++++++++++++++++++++++++++++++" << endl;
-                    feasible = false;
                     return pSimplex_tuple
                     (xB.dot(c), xB, base, yB, -2, iter);
                 }
@@ -254,34 +214,40 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         }
 
 
-        // cout << "Check if yB >= 0" << endl;
+        // controlla se e' stato raggiunto l'ottimo
+        // cout << "Check if yB >= 0" << endl; 
         bool yB_geq_0 = true;
-        for (ll i = 0; i < yB.size(); i++) {
+        for (ll i = 0; i < yB.rows(); i++) {
             if (get_sign(yB(i)) == -1) {
                 yB_geq_0 = false;
                 break;
             }
         }
         if (yB_geq_0) {
+            // raggiunto l'ottimo
             cout << "++++++++++++++++++++++++++++++" << endl;
             cout << "Optimal solution found" << endl;
             cout << "++++++++++++++++++++++++++++++" << endl;
-            cout << "xB = " << endl << xB.transpose() << endl;
-            cout << "yB = " << endl << yB.transpose() << endl;
-            cout << "fObj = " << xB.dot(c) << endl;
-            cout << "iter = " << iter << endl;
-            cout << "++++++++++++++++++++++++++++++" << endl;
+            // cout << "xB = " << endl << xB.transpose() << endl;
+            // cout << "yB = " << endl << yB.transpose() << endl;
+            // cout << "fObj = " << xB.dot(c) << endl;
+            // cout << "iter = " << iter << endl;
+            // cout << "++++++++++++++++++++++++++++++" << endl;
+            cout << "--------------------------" << endl;
+            cout << "Completed in " << ((duration<double>)(high_resolution_clock::now() - start)).count() << " seconds" << endl;
+            cout << "--------------------------" << endl;
             return pSimplex_tuple
             (xB.dot(c), xB, base, yB, 1, iter);
         }
 
-        // Find the outgoing index
-        for (ll i = 0; i < yB.size(); i++) {
+        // Trova l'indice uscente
+        for (ll i = 0; i < yB.rows(); i++) {
             if (get_sign(yB(i)) == -1) {
                 h = *base.find_by_order(i);
                 break;
             }
         }
+
 
         cout << "-------" << endl;
         cout << "h = " << h << endl;
@@ -290,21 +256,16 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         W = -Binv;
         // cout << "W = " << endl << W << endl;
         // cout << "-----" << endl;
-
         Wh = W.col(base.order_of_key(h));
-
         // cout << "Wh = " << endl << Wh.transpose() << endl;
         // cout << "-----" << endl;
-
-
         AWh = A * Wh;
-
         // cout << "AWh = " << endl << AWh.transpose() << endl;
         // cout << "-----" << endl;
 
         cout << "Check if unbounded" << endl;
         bool unbounded = true;
-        for (ll i = 0; i < AWh.size(); i++) {
+        for (ll i = 0; i < AWh.rows(); i++) {
             if (get_sign(AWh(i)) == 1) {
                 unbounded = false;
                 break;
@@ -318,13 +279,11 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         }
 
         cout << "calculating ratios..." << endl;
-        // ratios
-        // find the incoming index
+        // rapporti
+        // trova l'indice entrante
         BaseType theta = -1;
-        
         ridx = 0;
-
-        for (int i = 0; i < A.rows(); i++) {
+        for (int i = 0; i < nCon; i++) {
             if (get_sign(AWh(i)) == 1) {
                 // cout << (b(i) - A.row(i).dot(xB)) / AWh(i)<< endl;
                 BaseType rvalue = (b(i) - A.row(i).dot(xB)) / AWh(i);
@@ -350,25 +309,19 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         cout << "k = " << k << endl;
         cout << "-------" << endl;
 
+        // Update dell'inversa
         cout << "Updating Inverse" << endl;
         cout << "-------" << endl;
         upindex = base.order_of_key(h);
-
-        Vec e = Vec::Zero(A.cols());
-        // cout << "upindex = " << upindex << endl;
+        Vec e = Vec::Zero(nVar);
         e(upindex) = 1;
-        // cout << "Br =" << endl <<  Binv.row(upindex) << endl;
-        // cout << "Arkh =" << endl <<  A.row(k) - A.row(h) << endl;
         Vec u = e;
         Vec v = A.row(k) - A.row(h);
-        // cout << "B-uvt" << endl << B + u*v.transpose() << endl;
-        // cout << "e = " << endl << e.transpose() << endl;
         Binv = inverse_update(Binv, e, v);
 
-        // cout << "Binv = " << endl << Binv << endl;
-        // cout << "-----" << endl;
         base.erase(h);
         base.insert(k);
+
         cout << "-----" << endl;
         cout << "base = " << endl;
         for(auto i : base) cout << i << " ";
@@ -385,10 +338,12 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         // }
         // cout << "upindex = " << upindex << endl;
         // cout << "upindex2 = " << upindex2 << endl;
-        cout << "Permuting Binv" << endl;
-        cout << "-------" << endl;
-        Mat I = Mat::Identity(A.cols(), A.cols());
-        Mat P = I;
+        // cout << "Permuting Binv" << endl;
+        // cout << "-------" << endl;
+        
+        // soluzione naive
+        // Mat I = Mat::Identity(nVar, nVar);
+        // Mat P = I;
         // // shift the columns from upindex to upindex2 to the left
         // if (upindex2 > upindex) {
         //     P.block(upindex, upindex + 1, upindex2 - upindex, upindex2 - upindex) = I.block(upindex, upindex, upindex2 - upindex, upindex2 - upindex);
@@ -407,6 +362,9 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
         // cout << "upindex = " << upindex << endl;
         // cout << "upindex2 = " << upindex2 << endl;
         // cout << "Binv = " << endl << Binv << endl;
+
+
+        // portare upindex in upindex2 shiftando a destra o sinistra in base a se e' maggiore o minore
         if (upindex > upindex2) {
             Vec temp = Binv.col(upindex);
             Mat temp2 = Binv.block(0, upindex2, Binv.rows(), upindex - upindex2);
@@ -427,12 +385,16 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
             cout << "double = " << (double)xB.dot(c) << endl;
         #endif
         cout << "-----" << endl;
+        cout << "Iteration " << iter << " completed in " << ((duration<double>)(high_resolution_clock::now() - start_iter)).count() << " seconds" << endl;
+        cout << "-----" << endl;
 
     }
     cout << "++++++++++++++++++++++++++++++" << endl;
     cout << "Max iter reached" << endl;
     cout << "++++++++++++++++++++++++++++++" << endl;
-
+    cout << "--------------------------" << endl;
+    cout << "Completed in " << ((duration<double>)(high_resolution_clock::now() - start)).count() << " seconds" << endl;
+    cout << "--------------------------" << endl;
     return pSimplex_tuple
     (xB.dot(c), xB, base, yB, 0, iter);
 
@@ -442,12 +404,12 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     ll iter = 0;
     ll nVar = A.cols();
     ll nCon = A.rows();
-    Mat B(A.cols(), A.cols());
-    Mat Binv(A.cols(), A.cols());
+    Mat B(nVar, nVar);
+    Mat Binv(nVar, nVar);
 
-    Vec bB(A.cols());
-    Vec xB(A.cols());
-    Vec yB(A.rows());
+    Vec bB(nVar);
+    Vec xB(nVar);
+    Vec yB(nCon);
     
     osl base;
     ll bIdx = 0;
@@ -463,10 +425,10 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     xB = Binv * bB;
 
     cout << "----- pSimplexAux -----" << endl;
-    cout << "A = " << endl << A << endl;
-    cout << "-----" << endl;
-    cout << "b = " << endl << b.transpose() << endl;
-    cout << "-----" << endl;
+    // cout << "A = " << endl << A << endl;
+    // cout << "-----" << endl;
+    // cout << "b = " << endl << b.transpose() << endl;
+    // cout << "-----" << endl;
     // cout << "base = " << endl;
     // for(auto i : base) cout << i << " ";
     // cout << endl;
@@ -477,7 +439,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     // cout << "-----" << endl;
 
     bool feasible = true;
-    for (ll i = 0; i < b.size(); i++) {
+    for (ll i = 0; i < b.rows(); i++) {
         if (get_sign(A.row(i).dot(xB)-b(i))  == 1) {
             // cout << "A.row(" << i << ").dot(xB) = " << A.row(i).dot(xB) << endl;
             // cout << "b(" << i << ") = " << b(i) << endl;
@@ -498,8 +460,8 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
 
     osl U, V;
     for (ll i = nVar; i < nCon; i++) {
-        cout << A.row(i).dot(xB) - b(i) << endl;
-        cout << get_sign(A.row(i).dot(xB) - b(i)) << endl;
+        // cout << A.row(i).dot(xB) - b(i) << endl;
+        // cout << get_sign(A.row(i).dot(xB) - b(i)) << endl;
         if (get_sign(A.row(i).dot(xB) - b(i)) == 1) {
             V.insert(i);
         } else {
@@ -511,13 +473,13 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     // for(auto i : U) cout << i << " ";
     // cout << endl;
     // cout << "-----" << endl;
-    cout << "V = " << endl;
-    for(auto i : V) cout << i << " ";
+    // cout << "V = " << endl;
+    // for(auto i : V) cout << i << " ";
     // cout << endl;
     // cout << "-----" << endl;
 
-    ll nConAux = nCon + V.size();
-    ll nVarAux = nVar + V.size();
+    ll nConAux = nCon + (ll)V.size();
+    ll nVarAux = nVar + (ll)V.size();
 
     Mat Aaux(nConAux, nVarAux);
 
@@ -526,10 +488,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     ll Idx = 0;
     for (ll i: V) {
         Aaux(i, nVar + Idx) = -1;
-        // cout << "Aaux(" << i << "," << nVar + Idx << ") = -1" << endl;
         Aaux(nCon + Idx, nVar + Idx) = -1;
-        // cout << "Aaux(" << nCon + Idx << "," << nVar + Idx << ") = -1" << endl;
-        // cout << "Aaux_" << Idx <<  " = " << endl << Aaux << endl;
         Idx++;
     }
 
@@ -543,31 +502,31 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
     baseAux.join(base);
     baseAux.join(V);
 
-    cout << "-----" << endl;
-    cout << "U = " << endl;
-    for(auto i : U) cout << i << " ";
-    cout << endl;
-    cout << "-----" << endl;
-    cout << "V = " << endl;
-    for(auto i : V) cout << i << " ";
-    cout << endl;
-    cout << "-----" << endl;
-    cout << "Aaux = " << endl << Aaux << endl;
-    cout << "-----" << endl;
-    cout << "baux = " << endl << baux.transpose() << endl;
-    cout << "-----" << endl;
-    cout << "cAux = " << endl << cAux.transpose() << endl;
-    cout << "-----" << endl;
-    cout << "baseAux = " << endl;
-    for(auto i : baseAux) cout << i << " ";
-    cout << endl;
+    // cout << "-----" << endl;
+    // cout << "U = " << endl;
+    // for(auto i : U) cout << i << " ";
+    // cout << endl;
+    // cout << "-----" << endl;
+    // cout << "V = " << endl;
+    // for(auto i : V) cout << i << " ";
+    // cout << endl;
+    // cout << "-----" << endl;
+    // cout << "Aaux = " << endl << Aaux << endl;
+    // cout << "-----" << endl;
+    // cout << "baux = " << endl << baux.transpose() << endl;
+    // cout << "-----" << endl;
+    // cout << "cAux = " << endl << cAux.transpose() << endl;
+    // cout << "-----" << endl;
+    // cout << "baseAux = " << endl;
+    // for(auto i : baseAux) cout << i << " ";
+    // cout << endl;
     pSimplex_tuple answer = pSimplex(cAux, Aaux, baux, baseAux, max_iter);
 
     if (get<4>(answer) == 1) {
         cout << "++++++++++++++++++++++++++++++" << endl;
         cout << "Auxiliary problem solved" << endl;
         cout << "++++++++++++++++++++++++++++++" << endl;
-        // remove the artificial variables
+        // rimozione delle variabili artificiali
         osl baseAux = get<2>(answer);
         cout << "baseAux = " << endl;
         for(auto i : baseAux) cout << i << " ";
@@ -579,7 +538,7 @@ pair<osl, ll> pSimplexAux(Mat A, Vec b, ll max_iter) {
             if (i < nCon) {
                 base.insert(i);
             }
-            if (base.size() == nVar) {
+            if ((ll)base.size() == nVar) {
                 break;
             }
         }

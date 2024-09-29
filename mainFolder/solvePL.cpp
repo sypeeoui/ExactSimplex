@@ -1,13 +1,14 @@
 #include <iostream>
 #include "Simplex.h" // Include the Simplex header file
 #include <cstdio>
-int main(int argc, char* argv[]) {
+// int main(int argc, char* argv[]) {
     // if (argc < 2) {
     //     std::cout << "Usage: " << argv[0] << " <input_file>" << std::endl;
     //     return 1;
     // }
-
     // freopen(argv[1], "r", stdin);
+
+int main() {
     cout << "Precision = " << PRECISION << endl;
 
     ll csize;
@@ -52,20 +53,21 @@ int main(int argc, char* argv[]) {
     cin >> max_iter;
     pSimplex_tuple answer = pSimplex(c, A, b, base, max_iter);
     cout << "---- pSimplex ----" << endl;
-    cout << "fObj = " << get<0>(answer) << endl;
+    cout << "-----" << endl;
+    cout << "flag = " << get<4>(answer) << endl;
     cout << "-----" << endl;
     cout << "xB = " << endl << get<1>(answer).transpose() << endl;
+    cout << "-----" << endl;
+    cout << "yB = " << endl << get<3>(answer).transpose() << endl;
     cout << "-----" << endl;
     cout << "base = " << endl;
     for(auto i : get<2>(answer)) cout << i << " ";
     cout << endl;
-    cout << "-----" << endl;
-    cout << "yB = " << endl << get<3>(answer).transpose() << endl;
-    cout << "-----" << endl;
-    cout << "flag = " << get<4>(answer) << endl;
+    cout << "fObj = " << get<0>(answer) << endl;
     cout << "-----" << endl;
     cout << "iter = " << get<5>(answer) << endl;
     cout << "-----" << endl;
+
 
     return 0;
 }
