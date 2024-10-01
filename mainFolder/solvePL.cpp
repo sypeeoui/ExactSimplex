@@ -26,8 +26,10 @@ int main() {
     #elif USE_MPF
         mpf_class aux;
         mpf_set_default_prec(PRECISION);
-    #else
+    #elif defined(USE_RATIONAL_INT) || defined(USE_RATIONAL_LONG_LONG)
         ll aux;
+    #else
+        BaseType aux;
     #endif
     cout << "c = ";
     for(ll i = 0; i < csize; i++) {

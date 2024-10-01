@@ -106,7 +106,7 @@ pSimplex(Vec c, Mat A, Vec b, osl base, ll max_iter) {
     ll ridx; // contatore dei rapporti
 
     // variabili di output fObj,xB,B,yB,flag,iter
-    BaseType fObj;
+    // BaseType fObj;
     // xB;
     // base;
     // yB;

@@ -2,32 +2,27 @@
 import argparse
 import numpy as np
 
-def bland_trick(n, k):
+def small2D_poly(n, k):
     # Vector c
-    c = np.array([0]*(n-1) + [1])
-
+    c = np.array([1, 1])
     if k == -1:
-        k = 10
+        k = n//2
     # Vector b
-    b = np.array([-1] + [0]*(n-1) + [k-1] + [k]*(n-1))
-
+    b = np.array([0, n*n, 0, n, 0])
     # Matrix A
-    A = np.zeros((2*n, n))
-    for i in range(n):
-        A[i, i] = -k
-        if (i > 0):
-            A[i, i-1] = 1
-
-        A[n+i, i] = k
-        if (i > 0):
-            A[n+i, i-1] = 1
-    
-    max_iterations = 2**n - 1
-    
+    A = [
+        [-1, 0],
+        [-n*k +n +k, n*k],
+        [0, -1],
+        [-n + 1, n],
+        [1, -1],
+    ]
+    max_iterations = 100
     return c, b, A, max_iterations
 
+
 def print_problem(n, k):
-    c, b, A, max_iterations = bland_trick(n, k)
+    c, b, A, max_iterations = small2D_poly(n, k)
     
     # Printing the outputs in the desired format
     print(len(c))
@@ -43,9 +38,10 @@ def print_problem(n, k):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate the a problem given n")
-    parser.add_argument("n", type=int, help="Dimension of the problem")
+    parser.add_argument("e", type=int, help="Dimension of the problem")
     parser.add_argument("k", type=int, nargs='?', default=-1, help="factor k")
 
     args = parser.parse_args()
+    n = 10**args.e
 
-    print_problem(args.n, args.k)
+    print_problem(n, args.k)

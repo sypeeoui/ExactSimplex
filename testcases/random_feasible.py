@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 
 def generate_random_feasible_lp_integers(n, m, max_val):
-    # Calculate the range based on the product of len(c) * len(b)
+    # Genero un problema di PL casuale con valori interi
     product_len = (n * m)**2
     if max_val == -1:
         min_val = -product_len
@@ -12,23 +12,21 @@ def generate_random_feasible_lp_integers(n, m, max_val):
         min_val = -max_val
     # print(f"Min val: {min_val}, Max val: {max_val}")
     
-    # Generate a random feasible solution x with integer values within the range
+    # Genero un vettore x interi casuali nell'intervallo
     x = np.random.randint(min_val, max_val + 1, size=n)
 
-    # Generate a random matrix A (m x n) with integer values within the range
+    # Genero una matrice A con valori interi casuali nell'intervallo
     A = np.random.randint(min_val, max_val + 1, size=(m, n))
 
-    # Calculate b as A * x to ensure feasibility
+    # Calcolo il vettore b per garantire che il problema sia ammissibile
     b = A @ x
-    # Add noise to m - n elements of b 
+    # Aggiungo rumore a b
     noised_indices = np.random.choice(m, m - n, replace=False)
     noise = np.random.randint(0, max_val**2, size=m - n)
     b[noised_indices] += noise
     
-    # Generate random objective function coefficients c with integer values within the range
+    # Genero un vettore c con valori interi casuali nell'intervallo
     c = np.random.randint(min_val, max_val + 1, size=n)
-    # for i in range(n):
-    #     c[i] = c[i] * np.sign(x[i])
 
     # Maximum number of iterations (arbitrary for random LP)
     max_iterations = n*m

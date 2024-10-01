@@ -10,6 +10,16 @@ TODO
 
 ## Setup
 
+### GMPlib
+Installa `gmplib`
+```bash
+sudo pacman -Sy lib32-gmp # ubuntu
+```
+```bash
+sudo apt-get install libgmp3-dev # archlinux
+```
+
+### Repository
 ```bash
 git clone git@github.com:sypeeoui/ExactSimplex.git
 cd ExactSimplex
@@ -47,7 +57,7 @@ Gli eseguiti verranno prodotti nella cartella `out/`.
 ## Solve PL
 
 Per risolvere un problema di PL della forma
-$$ \min c^T x \quad \text{s.t.} \quad Ax = b, x \geq 0 $$
+$$ \max c^T x \quad \text{vincolato da} \quad Ax \le b$$
 
 Creare un file di testo contenente i seguenti parametri (solo numeri interi) in ordine separati da spazi o a capo
 ```
@@ -76,6 +86,19 @@ python3 testcases/klee_minty.py n
 
 ```bash
 python3 testcases/klee_minty.py 25 | ./out/solvePL
+```
+
+## Bland-Trick
+
+Script in python per generare i testcases di complessità esponenziale
+```bash
+python3 testcases/bland_trick.py n
+```
+
+**Esempio**
+
+```bash
+python3 testcases/bland_trick.py 20 | ./out/solvePL
 ```
 
 ## Random Feasible
