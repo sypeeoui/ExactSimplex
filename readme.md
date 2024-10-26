@@ -4,10 +4,6 @@
 
 Implementazione in C++ dell'algoritmo del simplesso primale con soluzioni esatte usando i numeri razionali.
 
-## Descrizione
-
-TODO
-
 ## Setup
 
 ### GMPlib
@@ -142,10 +138,10 @@ Marco Cococcioni
   - [X] Implementazione pSimplexAux
   - [X] Rendere il codice funzionante per i numeri razionali/double
   - [X] Uso di MPQ e MPF per implementare razionali/reali a precisione arbitraria
-- [ ] Testing e applicazioni (confronto con la versione floating point)
+- [X] Testing e applicazioni (confronto con la versione floating point)
   - [X] Implementazione solvePL per testcase
   - [X] Testcase da prove d'esame di Ricerca Operativa
   - [X] Implementazione Klee-Minty per generare testcase
-  - [ ] Implementazione random_feasible per generare testcase pesanti
+  - [X] Implementazione random_feasible per generare testcase pesanti
 
-- [ ] Relazione / Presentazione
+- [X] Relazione / Presentazione
